@@ -423,6 +423,7 @@ namespace Ocelot.UnitTests.Requester
 
         private void WhenIBuild()
         {
+            var water = _context.Items.DownstreamRoute();
             _httpClient = _builder.Create(_context.Items.DownstreamRoute());
         }
 

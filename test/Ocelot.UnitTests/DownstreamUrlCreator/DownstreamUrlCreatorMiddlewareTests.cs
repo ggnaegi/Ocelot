@@ -392,7 +392,7 @@ namespace Ocelot.UnitTests.DownstreamUrlCreator
 
         private void GivenTheServiceProviderConfigIs(ServiceProviderConfiguration config)
         {
-            var configuration = new InternalConfiguration(null, null, config, null, null, null, null, null, null);
+            var configuration = new InternalConfiguration(null, null, config, null, null, null, null, null, null, null);
             _httpContext.Items.SetIInternalConfiguration(configuration);
         }
 

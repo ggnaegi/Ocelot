@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Net.Http;
 using Moq;
 
 using Ocelot.Configuration;
@@ -126,6 +126,7 @@ namespace Ocelot.UnitTests.Configuration
             public QoSOptions QoSOptions { get; }
             public HttpHandlerOptions HttpHandlerOptions { get; }
             public Version DownstreamHttpVersion { get; }
+            public HttpVersionPolicy? DownstreamVersionPolicy { get; }
         }
     }
 }

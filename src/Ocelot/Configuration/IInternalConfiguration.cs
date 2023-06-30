@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using System.Net.Http;
 
 namespace Ocelot.Configuration
 {
@@ -22,5 +23,7 @@ namespace Ocelot.Configuration
         HttpHandlerOptions HttpHandlerOptions { get; }
 
         Version DownstreamHttpVersion { get; }
+
+        HttpVersionPolicy? DownstreamVersionPolicy { get; }
     }
 }
