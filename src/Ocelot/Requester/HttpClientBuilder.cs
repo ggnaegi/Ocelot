@@ -63,6 +63,8 @@ namespace Ocelot.Requester
             _httpClient = new HttpClient(CreateHttpMessageHandler(handler, downstreamRoute))
             {
                 Timeout = timeout,
+                DefaultRequestVersion = downstreamRoute.DownstreamHttpVersion,
+                DefaultVersionPolicy = downstreamRoute.DownstreamVersionPolicy,
             };
 
             _client = new HttpClientWrapper(_httpClient);

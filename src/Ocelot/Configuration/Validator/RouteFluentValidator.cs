@@ -91,6 +91,11 @@ namespace Ocelot.Configuration.Validator
             {
                 RuleFor(r => r.DownstreamHttpVersion).Matches("^[0-9]([.,][0-9]{1,1})?$");
             });
+
+            When(route => !string.IsNullOrEmpty(route.DownstreamVersionPolicy), () =>
+            {
+                RuleFor(r => r.DownstreamVersionPolicy).Matches("^(exact|upgradeable|downgradeable)$");
+            });
         }
 
         private async Task<bool> IsSupportedAuthenticationProviders(FileAuthenticationOptions authenticationOptions, CancellationToken cancellationToken)

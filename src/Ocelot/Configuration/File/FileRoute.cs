@@ -57,5 +57,6 @@ namespace Ocelot.Configuration.File
         public bool DangerousAcceptAnyServerCertificateValidator { get; set; }
         public FileSecurityOptions SecurityOptions { get; set; }
         public string DownstreamHttpVersion { get; set; }
+        public string DownstreamVersionPolicy { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-
+using System.Net.Http;
 using Ocelot.Configuration.Creator;
 
 using Ocelot.Values;
@@ -43,7 +43,8 @@ namespace Ocelot.Configuration
             bool dangerousAcceptAnyServerCertificateValidator,
             SecurityOptions securityOptions,
             string downstreamHttpMethod,
-            Version downstreamHttpVersion)
+            Version downstreamHttpVersion,
+            HttpVersionPolicy downstreamVersionPolicy)
         {
             DangerousAcceptAnyServerCertificateValidator = dangerousAcceptAnyServerCertificateValidator;
             AddHeadersToDownstream = addHeadersToDownstream;
@@ -79,6 +80,7 @@ namespace Ocelot.Configuration
             SecurityOptions = securityOptions;
             DownstreamHttpMethod = downstreamHttpMethod;
             DownstreamHttpVersion = downstreamHttpVersion;
+            DownstreamVersionPolicy = downstreamVersionPolicy;
         }
 
         public string Key { get; }
@@ -115,5 +117,6 @@ namespace Ocelot.Configuration
         public SecurityOptions SecurityOptions { get; }
         public string DownstreamHttpMethod { get; }
         public Version DownstreamHttpVersion { get; }
+        public HttpVersionPolicy DownstreamVersionPolicy { get; }
     }
 }
