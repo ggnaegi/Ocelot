@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System;
-using System.Net.Http;
-
 namespace Ocelot.Configuration
 {
     public interface IInternalConfiguration

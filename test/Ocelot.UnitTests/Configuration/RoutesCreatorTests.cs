@@ -5,13 +5,6 @@ using Ocelot.Configuration.Builder;
 using Ocelot.Configuration.Creator;
 using Ocelot.Configuration.File;
 using Ocelot.Values;
-using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using TestStack.BDDfy;
-using Xunit;
 
 namespace Ocelot.UnitTests.Configuration
 {
