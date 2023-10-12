@@ -1,5 +1,4 @@
-﻿using Moq;
-using Ocelot.Cache;
+﻿using Ocelot.Cache;
 using Ocelot.Configuration;
 using Ocelot.Configuration.Builder;
 using Ocelot.Configuration.Creator;
