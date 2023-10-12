@@ -161,9 +161,9 @@ namespace Ocelot.DependencyInjection
             Services.TryAddSingleton<IFrameworkDescription, FrameworkDescription>();
             Services.TryAddSingleton<IQoSFactory, QoSFactory>();
             Services.TryAddSingleton<IExceptionToErrorMapper, HttpExeptionToErrorMapper>();
+            Services.TryAddSingleton<IVersionPolicyCreator, VersionPolicyCreator>();
             Services.TryAddSingleton<IVersionCreator, HttpVersionCreator>();
             Services.TryAddSingleton<IWebSocketsFactory, WebSocketsFactory>();
-            Services.TryAddSingleton<IVersionPolicyCreator, VersionPolicyCreator>();
 
             //add security
             AddSecurity();
