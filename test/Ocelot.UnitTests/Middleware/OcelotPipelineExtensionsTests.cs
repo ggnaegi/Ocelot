@@ -11,12 +11,6 @@ using Ocelot.Middleware;
 using Ocelot.Request.Middleware;
 using Ocelot.WebSockets;
 
-using Shouldly;
-
-using TestStack.BDDfy;
-
-using Xunit;
-
 namespace Ocelot.UnitTests.Middleware
 {
     public class OcelotPipelineExtensionsTests

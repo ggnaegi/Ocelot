@@ -64,6 +64,7 @@ using Ocelot.Security.IPSecurity;
 using Ocelot.ServiceDiscovery;
 using Ocelot.ServiceDiscovery.Providers;
 using Ocelot.WebSockets;
+using System.Reflection;
 
 namespace Ocelot.DependencyInjection
 {
@@ -150,6 +151,7 @@ namespace Ocelot.DependencyInjection
             Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             Services.TryAddSingleton<IRequestScopedDataRepository, HttpDataRepository>();
             Services.AddMemoryCache();
+            Services.TryAddSingleton<IVersionPolicyCreator, VersionPolicyCreator>();
             Services.TryAddSingleton<OcelotDiagnosticListener>();
             Services.TryAddSingleton<IResponseAggregator, SimpleJsonResponseAggregator>();
             Services.TryAddSingleton<ITracingHandlerFactory, TracingHandlerFactory>();
@@ -164,7 +166,6 @@ namespace Ocelot.DependencyInjection
             Services.TryAddSingleton<IExceptionToErrorMapper, HttpExeptionToErrorMapper>();
             Services.TryAddSingleton<IVersionCreator, HttpVersionCreator>();
             Services.TryAddSingleton<IWebSocketsFactory, WebSocketsFactory>();
-            Services.TryAddSingleton<IVersionPolicyCreator, VersionPolicyCreator>();
 
             // Add security
             Services.TryAddSingleton<ISecurityOptionsCreator, SecurityOptionsCreator>();
