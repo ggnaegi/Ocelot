@@ -25,10 +25,14 @@ jobs:
       run: dotnet restore Ocelot.sln
     - name: Build
       run: dotnet build --no-restore Ocelot.sln
-    - name: Unit & Integration Test
+    - name: Acceptance Tests
       run: dotnet test test/Ocelot.AcceptanceTests/Ocelot.AcceptanceTests.csproj --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=opencover
-    - name: Rename paths in coverage file (Integration Test)
-      run: sed -i 's|/home/runner/work/Ocelot/Ocelot|/github/workspace|g' /home/runner/work/Ocelot/Ocelot/test/Ocelot.AcceptanceTests/TestResults/coverage.opencover.xml  
+    - name: Rename paths in coverage file (Acceptance Tests)
+      run: sed -i 's|/home/runner/work/Ocelot/Ocelot|/github/workspace|g' /home/runner/work/Ocelot/Ocelot/test/Ocelot.AcceptanceTests/TestResults/coverage.opencover.xml
+    - name: Unit Tests
+      run: dotnet test test/Ocelot.UnitTests/Ocelot.UnitTests.csproj --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=opencover
+    - name: Rename paths in coverage file (Unit Tests)
+      run: sed -i 's|/home/runner/work/Ocelot/Ocelot|/github/workspace|g' /home/runner/work/Ocelot/Ocelot/test/Ocelot.UnitTests/TestResults/coverage.opencover.xml        
     - name: SonarScanner for .NET 7 with pull request decoration support
       uses: highbyte/sonarscan-dotnet@v2.2.6
       with:
