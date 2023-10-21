@@ -8,9 +8,9 @@ on:
         required: true
         default: 'warning'
   push:
-    branches: [ "release/20.0" ]
+    branches: [ "develop, release/20.0" ]
   pull_request:
-    branches: [ "release/20.0" ]
+    branches: [ "develop, release/20.0" ]
 
 jobs:
   CI_Pipeline:
