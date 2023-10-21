@@ -26,7 +26,7 @@ jobs:
     - name: Build
       run: dotnet build --no-restore Ocelot.sln
     - name: Unit & Integration Test
-      run: dotnet test --no-build test/Ocelot.UnitTests/Ocelot.UnitTests.csproj /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=opencover
+      run: dotnet test test/Ocelot.AcceptanceTests/Ocelot.AcceptanceTests.csproj --no-build /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=opencover
     - name: SonarScanner for .NET 7 with pull request decoration support
       uses: highbyte/sonarscan-dotnet@v2.2.6
       with:
