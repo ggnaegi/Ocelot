@@ -7,7 +7,7 @@ global using System.Net.Http;
 global using System.Threading;
 global using System.Threading.Tasks;
 
-// Project extra global namespaces
+// Project extra global namespaces //
 global using Moq;
 global using Ocelot;
 global using Shouldly;
