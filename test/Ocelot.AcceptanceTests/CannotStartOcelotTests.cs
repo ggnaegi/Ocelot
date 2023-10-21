@@ -196,16 +196,8 @@ namespace Ocelot.AcceptanceTests
                 },
             };
 
-            Exception exception = null;
             _steps.GivenThereIsAConfiguration(invalidConfig);
-            try
-            {
-                _steps.GivenOcelotIsRunning();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
+            var exception = Assert.Throws<AggregateException>(() => _steps.GivenOcelotIsRunning());
 
             exception.ShouldNotBeNull();
             exception.Message.ShouldBe("One or more errors occurred. (Unable to start Ocelot, errors are: Downstream Path Template test doesnt start with forward slash,Upstream Path Template api doesnt start with forward slash,When not using service discovery DownstreamHostAndPorts must be set and not empty or Ocelot cannot find your service!)");
