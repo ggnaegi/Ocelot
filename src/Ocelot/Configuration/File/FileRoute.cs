@@ -1,6 +1,6 @@
 ﻿namespace Ocelot.Configuration.File
 {
-    public class FileRoute : IRoute
+    public class FileRoute : IRoute, ICloneable
     {
         public FileRoute()
         {
@@ -22,6 +22,11 @@
             SecurityOptions = new FileSecurityOptions();
             UpstreamHeaderTransform = new Dictionary<string, string>();
             UpstreamHttpMethod = new List<string>();
+        }
+
+        public FileRoute(FileRoute from)
+        {
+            DeepCopy(from, this);
         }
 
         public Dictionary<string, string> AddClaimsToRequest { get; set; }
@@ -56,5 +61,51 @@
         public string UpstreamHost { get; set; }
         public List<string> UpstreamHttpMethod { get; set; }
         public string UpstreamPathTemplate { get; set; }
+
+        /// <summary>
+        /// Clones this object by making a deep copy.
+        /// </summary>
+        /// <returns>A <see cref="FileRoute"/> deeply copied object.</returns>
+        public object Clone()
+        {
+            var other = (FileRoute)MemberwiseClone();
+            DeepCopy(this, other);
+            return other;
+        }
+
+        public static void DeepCopy(FileRoute from, FileRoute to)
+        {
+            to.AddClaimsToRequest = new(from.AddClaimsToRequest);
+            to.AddHeadersToRequest = new(from.AddHeadersToRequest);
+            to.AddQueriesToRequest = new(from.AddQueriesToRequest);
+            to.AuthenticationOptions = new(from.AuthenticationOptions);
+            to.ChangeDownstreamPathTemplate = new(from.ChangeDownstreamPathTemplate);
+            to.DangerousAcceptAnyServerCertificateValidator = from.DangerousAcceptAnyServerCertificateValidator;
+            to.DelegatingHandlers = new(from.DelegatingHandlers);
+            to.DownstreamHeaderTransform = new(from.DownstreamHeaderTransform);
+            to.DownstreamHostAndPorts = from.DownstreamHostAndPorts.Select(x => new FileHostAndPort(x)).ToList();
+            to.DownstreamHttpMethod = from.DownstreamHttpMethod;
+            to.DownstreamHttpVersion = from.DownstreamHttpVersion;
+            to.DownstreamPathTemplate = from.DownstreamPathTemplate;
+            to.DownstreamScheme = from.DownstreamScheme;
+            to.FileCacheOptions = new(from.FileCacheOptions);
+            to.HttpHandlerOptions = new(from.HttpHandlerOptions);
+            to.Key = from.Key;
+            to.LoadBalancerOptions = new(from.LoadBalancerOptions);
+            to.Priority = from.Priority;
+            to.QoSOptions = new(from.QoSOptions);
+            to.RateLimitOptions = new(from.RateLimitOptions);
+            to.RequestIdKey = from.RequestIdKey;
+            to.RouteClaimsRequirement = new(from.RouteClaimsRequirement);
+            to.RouteIsCaseSensitive = from.RouteIsCaseSensitive;
+            to.SecurityOptions = new(from.SecurityOptions);
+            to.ServiceName = from.ServiceName;
+            to.ServiceNamespace = from.ServiceNamespace;
+            to.Timeout = from.Timeout;
+            to.UpstreamHeaderTransform = new(from.UpstreamHeaderTransform);
+            to.UpstreamHost = from.UpstreamHost;
+            to.UpstreamHttpMethod = new(from.UpstreamHttpMethod);
+            to.UpstreamPathTemplate = from.UpstreamPathTemplate;
+        }
     }
 }
