@@ -38,8 +38,8 @@
         public List<string> DelegatingHandlers { get; set; }
         public Dictionary<string, string> DownstreamHeaderTransform { get; set; }
         public List<FileHostAndPort> DownstreamHostAndPorts { get; set; }
-        public string DownstreamHttpMethod { get; set; }
         public string DownstreamHttpVersion { get; set; }
+        public string DownstreamHttpMethod { get; set; }
         public string DownstreamPathTemplate { get; set; }
         public string DownstreamScheme { get; set; }
         public string DownstreamVersionPolicy { get; set; }
