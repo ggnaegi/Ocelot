@@ -2,8 +2,8 @@
 {
     public class VersionPolicies
     {
-        public const string RequestVersionExact = nameof(RequestVersionExact);
-        public const string RequestVersionOrLower = nameof(RequestVersionOrLower);
-        public const string RequestVersionOrHigher = nameof(RequestVersionOrHigher);
+        public const string RequestVersionExact = nameof(HttpVersionPolicy.RequestVersionExact);
+        public const string RequestVersionOrLower = nameof(HttpVersionPolicy.RequestVersionOrLower);
+        public const string RequestVersionOrHigher = nameof(HttpVersionPolicy.RequestVersionOrHigher);
     }
 }
