@@ -42,7 +42,6 @@ namespace Ocelot.AcceptanceTests
                         DownstreamVersionPolicy = VersionPolicies.RequestVersionOrHigher,
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "GET" },
-                        DangerousAcceptAnyServerCertificateValidator = true,
                     },
                 },
             };
@@ -80,7 +79,6 @@ namespace Ocelot.AcceptanceTests
                         DownstreamVersionPolicy = VersionPolicies.RequestVersionOrLower,
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "GET" },
-                        DangerousAcceptAnyServerCertificateValidator = true,
                     },
                 },
             };
@@ -118,7 +116,6 @@ namespace Ocelot.AcceptanceTests
                         DownstreamVersionPolicy = VersionPolicies.RequestVersionExact,
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "GET" },
-                        DangerousAcceptAnyServerCertificateValidator = true,
                     },
                 },
             };
@@ -156,7 +153,6 @@ namespace Ocelot.AcceptanceTests
                         DownstreamVersionPolicy = VersionPolicies.RequestVersionExact,
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "GET" },
-                        DangerousAcceptAnyServerCertificateValidator = true,
                     },
                 },
             };
@@ -194,7 +190,6 @@ namespace Ocelot.AcceptanceTests
                         DownstreamVersionPolicy = VersionPolicies.RequestVersionOrLower,
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "GET" },
-                        DangerousAcceptAnyServerCertificateValidator = true,
                     },
                 },
             };
@@ -232,7 +227,6 @@ namespace Ocelot.AcceptanceTests
                         DownstreamVersionPolicy = VersionPolicies.RequestVersionOrLower,
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "GET" },
-                        DangerousAcceptAnyServerCertificateValidator = true,
                     },
                 },
             };
@@ -270,7 +264,6 @@ namespace Ocelot.AcceptanceTests
                         DownstreamVersionPolicy = VersionPolicies.RequestVersionOrHigher,
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "GET" },
-                        DangerousAcceptAnyServerCertificateValidator = true,
                     },
                 },
             };
@@ -308,7 +301,6 @@ namespace Ocelot.AcceptanceTests
                         DownstreamVersionPolicy = VersionPolicies.RequestVersionOrHigher,
                         UpstreamPathTemplate = "/",
                         UpstreamHttpMethod = new List<string> { "GET" },
-                        DangerousAcceptAnyServerCertificateValidator = true,
                     },
                 },
             };
