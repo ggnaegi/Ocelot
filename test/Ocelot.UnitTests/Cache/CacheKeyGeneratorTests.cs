@@ -3,13 +3,14 @@ using Ocelot.Configuration;
 using Ocelot.Configuration.Builder;
 using Ocelot.Request.Middleware;
 using System.Net.Http.Headers;
+using System.Text;
 
 namespace Ocelot.UnitTests.Cache
 {
     public class CacheKeyGeneratorTests
     {
         private readonly ICacheKeyGenerator _cacheKeyGenerator;
-        private readonly Mock<DownstreamRequest> _downstreamRequest;
+        private readonly Mock<HttpRequestMessage> _httpRequestMessage;
 
         private const string verb = "GET";
         private const string url = "https://some.url/blah?abcd=123";
@@ -18,17 +19,21 @@ namespace Ocelot.UnitTests.Cache
 
         public CacheKeyGeneratorTests()
         {
-            _cacheKeyGenerator = new CacheKeyGenerator();
+            var memoryStreamManager = new MemoryStreamManager();
+            _cacheKeyGenerator = new CacheKeyGenerator(memoryStreamManager);
 
-            _downstreamRequest = new Mock<DownstreamRequest>();
-            _downstreamRequest.SetupGet(x => x.Method).Returns(verb);
-            _downstreamRequest.SetupGet(x => x.OriginalString).Returns(url);
+            _httpRequestMessage = new Mock<HttpRequestMessage>();
+            _httpRequestMessage.SetupGet(x => x.Method).Returns(new HttpMethod(verb));
+            _httpRequestMessage.SetupGet(x => x.RequestUri.OriginalString).Returns(url);
 
             var headers = new HttpHeadersStub
             {
                 { headerName, header },
             };
-            _downstreamRequest.SetupGet(x => x.Headers).Returns(headers);
+
+
+
+            _httpRequestMessage.SetupGet(x => x.Headers).Returns(new HttpRequestHeaders(){});
         }
 
         [Fact]
@@ -39,7 +44,7 @@ namespace Ocelot.UnitTests.Cache
             _downstreamRequest.SetupGet(x => x.HasContent).Returns(true);
             _downstreamRequest.Setup(x => x.ReadContentAsync()).ReturnsAsync(content);
 
-            var cachekey = MD5Helper.GenerateMd5($"{verb}-{url}-{content}");
+            var cachekey = MD5Helper.GenerateMd5(Encoding.UTF8.GetBytes($"{verb}-{url}-{content}"));
 
             this.Given(x => x.GivenDownstreamRoute(null))
                 .When(x => x.WhenGenerateRequestCacheKey())
@@ -53,7 +58,7 @@ namespace Ocelot.UnitTests.Cache
             _downstreamRequest.SetupGet(x => x.HasContent).Returns(false);
 
             CacheOptions options = null;
-            var cachekey = MD5Helper.GenerateMd5($"{verb}-{url}");
+            var cachekey = MD5Helper.GenerateMd5(Encoding.UTF8.GetBytes($"{verb}-{url}"));
 
             this.Given(x => x.GivenDownstreamRoute(options))
                 .When(x => x.WhenGenerateRequestCacheKey())
@@ -66,12 +71,12 @@ namespace Ocelot.UnitTests.Cache
         {
             _downstreamRequest.SetupGet(x => x.HasContent).Returns(false);
 
-            CacheOptions options = new CacheOptions(100, "region", headerName);
-            var cachekey = MD5Helper.GenerateMd5($"{verb}-{url}-{header}");
+            CacheOptions options = new(100, "region", new []{headerName}, false);
+            var cacheKey = MD5Helper.GenerateMd5(Encoding.UTF8.GetBytes($"{verb}-{url}-{header}"));
 
             this.Given(x => x.GivenDownstreamRoute(options))
                 .When(x => x.WhenGenerateRequestCacheKey())
-                .Then(x => x.ThenGeneratedCacheKeyIs(cachekey))
+                .Then(x => x.ThenGeneratedCacheKeyIs(cacheKey))
                 .BDDfy();
         }
 
@@ -83,12 +88,12 @@ namespace Ocelot.UnitTests.Cache
             _downstreamRequest.SetupGet(x => x.HasContent).Returns(true);
             _downstreamRequest.Setup(x => x.ReadContentAsync()).ReturnsAsync(content);
 
-            CacheOptions options = new CacheOptions(100, "region", headerName);
-            var cachekey = MD5Helper.GenerateMd5($"{verb}-{url}-{header}-{content}");
+            CacheOptions options = new(100, "region", new []{headerName}, true);
+            var cacheKey = MD5Helper.GenerateMd5(Encoding.UTF8.GetBytes($"{verb}-{url}-{header}-{content}"));
 
             this.Given(x => x.GivenDownstreamRoute(options))
                 .When(x => x.WhenGenerateRequestCacheKey())
-                .Then(x => x.ThenGeneratedCacheKeyIs(cachekey))
+                .Then(x => x.ThenGeneratedCacheKeyIs(cacheKey))
                 .BDDfy();
         }
 

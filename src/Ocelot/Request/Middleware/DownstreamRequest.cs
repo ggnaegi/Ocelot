@@ -6,26 +6,33 @@ namespace Ocelot.Request.Middleware
     {
         private readonly HttpRequestMessage _request;
 
-        public DownstreamRequest() { }
-
         public DownstreamRequest(HttpRequestMessage request)
         {
             _request = request;
             Method = _request.Method.Method;
-            OriginalString = _request.RequestUri.OriginalString;
-            Scheme = _request.RequestUri.Scheme;
-            Host = _request.RequestUri.Host;
-            Port = _request.RequestUri.Port;
             Headers = _request.Headers;
-            AbsolutePath = _request.RequestUri.AbsolutePath;
-            Query = _request.RequestUri.Query;
+            Content = _request.Content;
+
+            if (_request.RequestUri == null)
+            {
+                throw new NullReferenceException("RequestUri is null");
+            }
+
+            var requestUri = _request.RequestUri;
+            OriginalString = requestUri.OriginalString;
+            Scheme = requestUri.Scheme;
+            Host = requestUri.Host;
+            Port = requestUri.Port;
+            AbsolutePath = requestUri.AbsolutePath;
+            Query = requestUri.Query;
+            
         }
 
-        public virtual HttpHeaders Headers { get; }
+        public HttpHeaders Headers { get; }
 
-        public virtual string Method { get; }
+        public string Method { get; }
 
-        public virtual string OriginalString { get; }
+        public string OriginalString { get; }
 
         public string Scheme { get; set; }
 
@@ -37,11 +44,7 @@ namespace Ocelot.Request.Middleware
 
         public string Query { get; set; }
 
-        public virtual bool HasContent { get => _request?.Content != null; }
-
-        public virtual Task<string> ReadContentAsync() => HasContent
-            ? _request.Content.ReadAsStringAsync()
-            : Task.FromResult(string.Empty);
+        public HttpContent Content { get; }
 
         public HttpRequestMessage ToHttpRequestMessage()
         {
@@ -82,7 +85,7 @@ namespace Ocelot.Request.Middleware
         {
             if (!string.IsNullOrEmpty(query) && query.StartsWith('?'))
             {
-                return query.Substring(1);
+                return query[1..];
             }
 
             return query;

@@ -40,6 +40,7 @@ namespace Ocelot.AcceptanceTests
                             FileCacheOptions = new FileCacheOptions
                             {
                                 TtlSeconds = 100,
+                                Header = "Test",
                             },
                         },
                     },
@@ -48,6 +49,7 @@ namespace Ocelot.AcceptanceTests
             this.Given(x => x.GivenThereIsAServiceRunningOn($"http://localhost:{port}", 200, "Hello from Laura", null, null))
                 .And(x => _steps.GivenThereIsAConfiguration(configuration))
                 .And(x => _steps.GivenOcelotIsRunning())
+                .When(x => _steps.GivenIAddAHeader("Test", "super motherfucker"))
                 .When(x => _steps.WhenIGetUrlOnTheApiGateway("/"))
                 .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
                 .And(x => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
