@@ -4,7 +4,6 @@ using Ocelot.Cache.Middleware;
 using Ocelot.Configuration;
 using Ocelot.Configuration.Builder;
 using Ocelot.DownstreamRouteFinder.UrlMatcher;
-using Ocelot.Infrastructure.RequestData;
 using Ocelot.Logging;
 using Ocelot.Middleware;
 
@@ -14,23 +13,20 @@ namespace Ocelot.UnitTests.Cache
     {
         private readonly Mock<IOcelotCache<CachedResponse>> _cache;
         private readonly Mock<IOcelotLoggerFactory> _loggerFactory;
-        private readonly Mock<IOcelotLogger> _logger;
         private OutputCacheMiddleware _middleware;
         private readonly RequestDelegate _next;
         private readonly ICacheKeyGenerator _cacheKeyGenerator;
         private CachedResponse _response;
         private readonly HttpContext _httpContext;
-        private Mock<IRequestScopedDataRepository> _repo;
 
         public OutputCacheMiddlewareTests()
         {
-            _repo = new Mock<IRequestScopedDataRepository>();
             _httpContext = new DefaultHttpContext();
             _cache = new Mock<IOcelotCache<CachedResponse>>();
             _loggerFactory = new Mock<IOcelotLoggerFactory>();
-            _logger = new Mock<IOcelotLogger>();
-            _cacheKeyGenerator = new CacheKeyGenerator();
-            _loggerFactory.Setup(x => x.CreateLogger<OutputCacheMiddleware>()).Returns(_logger.Object);
+            var logger = new Mock<IOcelotLogger>();
+            _cacheKeyGenerator = new CacheKeyGenerator(new MemoryStreamManager());
+            _loggerFactory.Setup(x => x.CreateLogger<OutputCacheMiddleware>()).Returns(logger.Object);
             _next = context => Task.CompletedTask;
             _httpContext.Items.UpsertDownstreamRequest(new Ocelot.Request.Middleware.DownstreamRequest(new HttpRequestMessage(HttpMethod.Get, "https://some.url/blah?abcd=123")));
         }
@@ -106,7 +102,7 @@ namespace Ocelot.UnitTests.Cache
             var route = new RouteBuilder()
                 .WithDownstreamRoute(new DownstreamRouteBuilder()
                     .WithIsCached(true)
-                    .WithCacheOptions(new CacheOptions(100, "kanken", null))
+                    .WithCacheOptions(new CacheOptions(100, "kanken", null, false))
                     .WithUpstreamHttpMethod(new List<string> { "Get" })
                     .Build())
                 .WithUpstreamHttpMethod(new List<string> { "Get" })

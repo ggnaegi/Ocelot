@@ -40,7 +40,7 @@ namespace Ocelot.AcceptanceTests
                             FileCacheOptions = new FileCacheOptions
                             {
                                 TtlSeconds = 100,
-                                Header = "Test",
+                                Headers = new []{"Test"},
                             },
                         },
                     },

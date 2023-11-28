@@ -14,28 +14,25 @@ namespace Ocelot.UnitTests.CacheManager
     public class OutputCacheMiddlewareRealCacheTests
     {
         private readonly IOcelotCache<CachedResponse> _cacheManager;
-        private readonly ICacheKeyGenerator _cacheKeyGenerator;
         private readonly OutputCacheMiddleware _middleware;
-        private readonly RequestDelegate _next;
-        private readonly Mock<IOcelotLoggerFactory> _loggerFactory;
-        private readonly Mock<IOcelotLogger> _logger;
         private readonly HttpContext _httpContext;
 
         public OutputCacheMiddlewareRealCacheTests()
         {
             _httpContext = new DefaultHttpContext();
-            _loggerFactory = new Mock<IOcelotLoggerFactory>();
-            _logger = new Mock<IOcelotLogger>();
-            _loggerFactory.Setup(x => x.CreateLogger<OutputCacheMiddleware>()).Returns(_logger.Object);
+            var loggerFactory = new Mock<IOcelotLoggerFactory>();
+            var logger = new Mock<IOcelotLogger>();
+            loggerFactory.Setup(x => x.CreateLogger<OutputCacheMiddleware>()).Returns(logger.Object);
             var cacheManagerOutputCache = CacheFactory.Build<CachedResponse>("OcelotOutputCache", x =>
             {
                 x.WithDictionaryHandle();
             });
             _cacheManager = new OcelotCacheManagerCache<CachedResponse>(cacheManagerOutputCache);
-            _cacheKeyGenerator = new CacheKeyGenerator();
+            ICacheKeyGenerator cacheKeyGenerator = new CacheKeyGenerator(new MemoryStreamManager());
             _httpContext.Items.UpsertDownstreamRequest(new Ocelot.Request.Middleware.DownstreamRequest(new HttpRequestMessage(HttpMethod.Get, "https://some.url/blah?abcd=123")));
-            _next = context => Task.CompletedTask;
-            _middleware = new OutputCacheMiddleware(_next, _loggerFactory.Object, _cacheManager, _cacheKeyGenerator);
+
+            static Task Next(HttpContext context) => Task.CompletedTask;
+            _middleware = new OutputCacheMiddleware(Next, loggerFactory.Object, _cacheManager, cacheKeyGenerator);
         }
 
         [Fact]
@@ -62,7 +59,7 @@ namespace Ocelot.UnitTests.CacheManager
 
         private void ThenTheContentTypeHeaderIsCached()
         {
-            var cacheKey = MD5Helper.GenerateMd5("GET-https://some.url/blah?abcd=123");
+            var cacheKey = MD5Helper.GenerateMd5("GEThttps://some.url/blah?abcd=123"u8.ToArray());
             var result = _cacheManager.Get(cacheKey, "kanken");
             var header = result.ContentHeaders["Content-Type"];
             header.First().ShouldBe("application/json");
@@ -77,7 +74,7 @@ namespace Ocelot.UnitTests.CacheManager
         {
             var route = new DownstreamRouteBuilder()
                 .WithIsCached(true)
-                .WithCacheOptions(new CacheOptions(100, "kanken", null))
+                .WithCacheOptions(new CacheOptions(100, "kanken", null, false))
                 .WithUpstreamHttpMethod(new List<string> { "Get" })
                 .Build();
 

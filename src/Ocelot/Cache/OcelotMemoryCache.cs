@@ -2,15 +2,15 @@
 
 namespace Ocelot.Cache
 {
-    public class AspMemoryCache<T> : IOcelotCache<T>
+    public class OcelotMemoryCache<T> : IOcelotCache<T>
     {
         private readonly IMemoryCache _memoryCache;
         private readonly Dictionary<string, List<string>> _regions;
 
-        public AspMemoryCache(IMemoryCache memoryCache)
+        public OcelotMemoryCache(IMemoryCache memoryCache)
         {
             _memoryCache = memoryCache;
-            _regions = new Dictionary<string, List<string>>();
+            _regions = new();
         }
 
         public void Add(string key, T value, TimeSpan ttl, string region)
@@ -27,23 +27,20 @@ namespace Ocelot.Cache
 
         public T Get(string key, string region)
         {
-            if (_memoryCache.TryGetValue(key, out T value))
-            {
-                return value;
-            }
-
-            return default(T);
+            return _memoryCache.TryGetValue(key, out T value) ? value : default;
         }
 
         public void ClearRegion(string region)
         {
-            if (_regions.ContainsKey(region))
+            if (!_regions.ContainsKey(region))
             {
-                var keys = _regions[region];
-                foreach (var key in keys)
-                {
-                    _memoryCache.Remove(key);
-                }
+                return;
+            }
+
+            var keys = _regions[region];
+            foreach (var key in keys)
+            {
+                _memoryCache.Remove(key);
             }
         }
 
@@ -59,9 +56,8 @@ namespace Ocelot.Cache
 
         private void SetRegion(string region, string key)
         {
-            if (_regions.ContainsKey(region))
+            if (_regions.TryGetValue(region, out var current))
             {
-                var current = _regions[region];
                 if (!current.Contains(key))
                 {
                     current.Add(key);

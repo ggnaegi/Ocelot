@@ -1,12 +1,13 @@
 ﻿using Ocelot.Configuration;
 using Ocelot.Request.Middleware;
+using System.IO;
 
 namespace Ocelot.Cache;
 
 public class CacheKeyGenerator : ICacheKeyGenerator
 {
-    private const char Delimiter = '-';
     private readonly IMemoryStreamManager _memoryStreamManager;
+    private static readonly Encoding Encoding = new UTF8Encoding(false);
 
     public CacheKeyGenerator(IMemoryStreamManager memoryStreamManager)
     {
@@ -17,64 +18,59 @@ public class CacheKeyGenerator : ICacheKeyGenerator
         DownstreamRoute downstreamRoute)
     {
         using var memoryStream = _memoryStreamManager.GetStream();
-        await using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
-
-        await writer.WriteAsync(downstreamRequest.Method);
-        await writer.WriteAsync(Delimiter);
-        await writer.WriteAsync(downstreamRequest.OriginalString);
+        await memoryStream.WriteAsync(Encoding.GetBytes(downstreamRequest.Method));
+        await memoryStream.WriteAsync(Encoding.GetBytes(downstreamRequest.OriginalString));
 
         var cacheOptions = downstreamRoute.CacheOptions;
         if (cacheOptions == null)
         {
-            return await GenerateMd5(writer, memoryStream);
+            memoryStream.Position = 0;
+            return MD5Helper.GenerateMd5(memoryStream);
         }
 
-        await AppendHeadersValues(writer, cacheOptions.Headers, downstreamRequest);
-        await AppendHashedBodyContent(writer, cacheOptions.RequestBodyHashing, downstreamRequest);
-        return await GenerateMd5(writer, memoryStream);
-    }
-
-    private static async Task<string> GenerateMd5(StreamWriter writer, MemoryStream memoryStream)
-    {
-        await writer.FlushAsync();
-        memoryStream.Position = 0;
-        return MD5Helper.GenerateMd5(memoryStream.ToArray());
-    }
-
-    private static async Task AppendHeadersValues(StreamWriter writer, IReadOnlyCollection<string> headers,
-        DownstreamRequest downstreamRequest)
-    {
-        if (headers == null || headers.Count == 0)
+        if (cacheOptions.Headers is { Length: > 0 })
         {
-            return;
+            await AppendHeadersValues(memoryStream, cacheOptions.Headers, downstreamRequest);
+        }
+        
+        if (cacheOptions.RequestBodyHashing)
+        {
+            await AppendHashedBodyContent(memoryStream, downstreamRequest);
         }
 
+        memoryStream.Position = 0;
+        return MD5Helper.GenerateMd5(memoryStream);
+    }
+
+    private static async Task AppendHeadersValues(Stream memoryStream, IEnumerable<string> headers, DownstreamRequest downstreamRequest)
+    {
         foreach (var headerKey in headers)
         {
-            var header = downstreamRequest.Headers
-                .FirstOrDefault(r => r.Key.Equals(headerKey, StringComparison.OrdinalIgnoreCase))
-                .Value?.FirstOrDefault();
-
-            if (string.IsNullOrEmpty(header))
+            if (!downstreamRequest.Headers.Contains(headerKey))
             {
                 continue;
             }
 
-            await writer.WriteAsync(Delimiter);
-            await writer.WriteAsync(header);
+            var headerValue = downstreamRequest.Headers.GetValues(headerKey).FirstOrDefault();
+
+            if (string.IsNullOrEmpty(headerValue))
+            {
+                continue;
+            }
+
+            await memoryStream.WriteAsync(Encoding.GetBytes(headerValue));
         }
     }
 
-    private static async Task AppendHashedBodyContent(StreamWriter writer, bool requestBodyHashing,
-        DownstreamRequest downstreamRequest)
+    private static async Task AppendHashedBodyContent(Stream memoryStream, DownstreamRequest downstreamRequest)
     {
-        if (!requestBodyHashing)
+        if (downstreamRequest.Content is { Headers.ContentLength: > 0 })
         {
-            return;
+            var contentBytes = await downstreamRequest.Content.ReadAsByteArrayAsync();
+            if (contentBytes.Length > 0)
+            {
+                await memoryStream.WriteAsync(contentBytes);
+            }
         }
-
-        var contentBytes = await downstreamRequest.Content.ReadAsByteArrayAsync();
-        await writer.WriteAsync(Delimiter);
-        await writer.WriteAsync(Convert.ToBase64String(contentBytes));
     }
 }

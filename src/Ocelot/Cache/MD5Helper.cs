@@ -16,4 +16,18 @@ public static class MD5Helper
 
         return sb.ToString();
     }
+
+    public static string GenerateMd5(MemoryStream stream)
+    {
+        using var md5 = MD5.Create();
+        var hashBytes = md5.ComputeHash(stream);
+        var sb = new StringBuilder(32);
+
+        foreach (var b in hashBytes)
+        {
+            sb.Append(b.ToString("X2"));
+        }
+
+        return sb.ToString();
+    }
 }

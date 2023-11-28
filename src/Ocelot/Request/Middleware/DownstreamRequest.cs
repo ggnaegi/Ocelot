@@ -1,94 +1,94 @@
 using System.Net.Http.Headers;
 
-namespace Ocelot.Request.Middleware
+#nullable enable
+
+namespace Ocelot.Request.Middleware;
+
+public class DownstreamRequest
 {
-    public class DownstreamRequest
+    private readonly HttpRequestMessage _request;
+
+    public DownstreamRequest(HttpRequestMessage request)
     {
-        private readonly HttpRequestMessage _request;
+        _request = request;
+        Method = _request.Method.Method;
+        Headers = _request.Headers;
+        Content = _request.Content;
 
-        public DownstreamRequest(HttpRequestMessage request)
+        if (_request.RequestUri == null)
         {
-            _request = request;
-            Method = _request.Method.Method;
-            Headers = _request.Headers;
-            Content = _request.Content;
-
-            if (_request.RequestUri == null)
-            {
-                throw new NullReferenceException("RequestUri is null");
-            }
-
-            var requestUri = _request.RequestUri;
-            OriginalString = requestUri.OriginalString;
-            Scheme = requestUri.Scheme;
-            Host = requestUri.Host;
-            Port = requestUri.Port;
-            AbsolutePath = requestUri.AbsolutePath;
-            Query = requestUri.Query;
-            
+            throw new NullReferenceException("RequestUri is null");
         }
 
-        public HttpHeaders Headers { get; }
+        var requestUri = _request.RequestUri;
+        OriginalString = requestUri.OriginalString;
+        Scheme = requestUri.Scheme;
+        Host = requestUri.Host;
+        Port = requestUri.Port;
+        AbsolutePath = requestUri.AbsolutePath;
+        Query = requestUri.Query;
+    }
 
-        public string Method { get; }
+    public HttpHeaders Headers { get; }
 
-        public string OriginalString { get; }
+    public string Method { get; }
 
-        public string Scheme { get; set; }
+    public string OriginalString { get; }
 
-        public string Host { get; set; }
+    public string Scheme { get; set; }
 
-        public int Port { get; set; }
+    public string Host { get; set; }
 
-        public string AbsolutePath { get; set; }
+    public int Port { get; set; }
 
-        public string Query { get; set; }
+    public string AbsolutePath { get; set; }
 
-        public HttpContent Content { get; }
+    public string Query { get; set; }
 
-        public HttpRequestMessage ToHttpRequestMessage()
+    public HttpContent? Content { get; }
+
+    public HttpRequestMessage ToHttpRequestMessage()
+    {
+        var uriBuilder = new UriBuilder
         {
-            var uriBuilder = new UriBuilder
-            {
-                Port = Port,
-                Host = Host,
-                Path = AbsolutePath,
-                Query = RemoveLeadingQuestionMark(Query),
-                Scheme = Scheme,
-            };
+            Port = Port,
+            Host = Host,
+            Path = AbsolutePath,
+            Query = RemoveLeadingQuestionMark(Query),
+            Scheme = Scheme,
+        };
 
-            _request.RequestUri = uriBuilder.Uri;
-            _request.Method = new HttpMethod(Method);
-            return _request;
+        _request.RequestUri = uriBuilder.Uri;
+        _request.Method = new HttpMethod(Method);
+        return _request;
+    }
+
+    public string ToUri()
+    {
+        var uriBuilder = new UriBuilder
+        {
+            Port = Port,
+            Host = Host,
+            Path = AbsolutePath,
+            Query = RemoveLeadingQuestionMark(Query),
+            Scheme = Scheme,
+        };
+
+        return uriBuilder.Uri.AbsoluteUri;
+    }
+
+    public override string ToString()
+    {
+        return ToUri();
+    }
+
+    private static string RemoveLeadingQuestionMark(string query)
+    {
+        if (!string.IsNullOrEmpty(query) && query.StartsWith('?'))
+        {
+            return query[1..];
         }
 
-        public string ToUri()
-        {
-            var uriBuilder = new UriBuilder
-            {
-                Port = Port,
-                Host = Host,
-                Path = AbsolutePath,
-                Query = RemoveLeadingQuestionMark(Query),
-                Scheme = Scheme,
-            };
-
-            return uriBuilder.Uri.AbsoluteUri;
-        }
-
-        public override string ToString()
-        {
-            return ToUri();
-        }
-
-        private static string RemoveLeadingQuestionMark(string query)
-        {
-            if (!string.IsNullOrEmpty(query) && query.StartsWith('?'))
-            {
-                return query[1..];
-            }
-
-            return query;
-        }
+        return query;
     }
 }

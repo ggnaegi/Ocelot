@@ -7,10 +7,9 @@ namespace Ocelot.Configuration
         public CacheOptions(FileCacheOptions fileCacheOptions, string region)
         {
             TtlSeconds = fileCacheOptions.TtlSeconds;
-            Region = fileCacheOptions.Region;
-            Headers = new string[] { fileCacheOptions.Header };
+            Headers = fileCacheOptions.Headers;
             RequestBodyHashing = fileCacheOptions.RequestBodyHashing;
-            Region = fileCacheOptions.Region ?? region;
+            Region = string.IsNullOrEmpty(fileCacheOptions.Region) ? region : fileCacheOptions.Region;
         }
 
         public CacheOptions(int ttlSeconds, string region, string[] headers, bool requestBodyHashing)
