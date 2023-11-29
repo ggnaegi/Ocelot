@@ -7,18 +7,18 @@ namespace Ocelot.Cache
     [Route("outputcache")]
     public class OutputCacheController : Controller
     {
-        private readonly IOcelotCache<CachedResponse> _cache;
+        private readonly IOcelotCacheProvider _cacheProvider;
 
-        public OutputCacheController(IOcelotCache<CachedResponse> cache)
+        public OutputCacheController(IOcelotCacheProvider cacheProvider)
         {
-            _cache = cache;
+            _cacheProvider = cacheProvider;
         }
 
         [HttpDelete]
         [Route("{region}")]
         public IActionResult Delete(string region)
         {
-            _cache.ClearRegion(region);
+            _cacheProvider.GetResponseCache().ClearRegion(region);
             return new NoContentResult();
         }
     }

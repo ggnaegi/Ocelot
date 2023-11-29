@@ -16,6 +16,7 @@ namespace Ocelot.UnitTests.CacheManager
         private readonly IOcelotCache<CachedResponse> _cacheManager;
         private readonly OutputCacheMiddleware _middleware;
         private readonly HttpContext _httpContext;
+        private readonly Mock<IOcelotCacheProvider> _cacheProvider;
 
         public OutputCacheMiddlewareRealCacheTests()
         {
@@ -30,9 +31,12 @@ namespace Ocelot.UnitTests.CacheManager
             _cacheManager = new OcelotCacheManagerCache<CachedResponse>(cacheManagerOutputCache);
             ICacheKeyGenerator cacheKeyGenerator = new CacheKeyGenerator(new MemoryStreamManager());
             _httpContext.Items.UpsertDownstreamRequest(new Ocelot.Request.Middleware.DownstreamRequest(new HttpRequestMessage(HttpMethod.Get, "https://some.url/blah?abcd=123")));
+            _cacheProvider = new Mock<IOcelotCacheProvider>();
+            _cacheProvider.Setup(x => x.GetCacheKeyGenerator()).Returns(cacheKeyGenerator);
+            _cacheProvider.Setup(x => x.GetResponseCache()).Returns(_cacheManager);
 
             static Task Next(HttpContext context) => Task.CompletedTask;
-            _middleware = new OutputCacheMiddleware(Next, loggerFactory.Object, _cacheManager, cacheKeyGenerator);
+            _middleware = new OutputCacheMiddleware(Next, loggerFactory.Object, _cacheProvider.Object);
         }
 
         [Fact]

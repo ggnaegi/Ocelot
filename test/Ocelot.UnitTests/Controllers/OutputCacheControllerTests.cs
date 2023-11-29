@@ -6,13 +6,15 @@ namespace Ocelot.UnitTests.Controllers
     public class OutputCacheControllerTests
     {
         private readonly OutputCacheController _controller;
-        private readonly Mock<IOcelotCache<CachedResponse>> _cache;
+        private readonly Mock<IOcelotCacheProvider> _cacheProvider;
         private IActionResult _result;
 
         public OutputCacheControllerTests()
         {
-            _cache = new Mock<IOcelotCache<CachedResponse>>();
-            _controller = new OutputCacheController(_cache.Object);
+            _cacheProvider = new Mock<IOcelotCacheProvider>();
+            _cacheProvider.Setup(x => x.GetResponseCache())
+                .Returns(new Mock<IOcelotCache<CachedResponse>>().Object);
+            _controller = new OutputCacheController(_cacheProvider.Object);
         }
 
         [Fact]
@@ -26,8 +28,8 @@ namespace Ocelot.UnitTests.Controllers
         private void ThenTheKeyIsDeleted(string key)
         {
             _result.ShouldBeOfType<NoContentResult>();
-            _cache
-                .Verify(x => x.ClearRegion(key), Times.Once);
+            _cacheProvider
+                .Verify(x => x.GetResponseCache().ClearRegion(key), Times.Once);
         }
 
         private void WhenIDeleteTheKey(string key)
