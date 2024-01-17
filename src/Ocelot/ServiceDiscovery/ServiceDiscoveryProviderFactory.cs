@@ -46,20 +46,17 @@ namespace Ocelot.ServiceDiscovery
         {
             _logger.LogInformation(() => $"Getting service discovery provider of {nameof(config.Type)} '{config.Type}'...");
 
-            if (config.Type?.ToLower() == "servicefabric")
+            if (config.Type != null && config.Type.Equals("servicefabric", StringComparison.OrdinalIgnoreCase))
             {
                 var sfConfig = new ServiceFabricConfiguration(config.Host, config.Port, route.ServiceName);
                 return new OkResponse<IServiceDiscoveryProvider>(new ServiceFabricServiceDiscoveryProvider(sfConfig));
             }
 
-            if (_delegates != null)
-            {
-                var provider = _delegates?.Invoke(_provider, config, route);
+            var provider = _delegates?.Invoke(_provider, config, route);
 
-                if (provider.GetType().Name.ToLower() == config.Type.ToLower())
-                {
-                    return new OkResponse<IServiceDiscoveryProvider>(provider);
-                }
+            if (provider != null)
+            {
+                return new OkResponse<IServiceDiscoveryProvider>(provider);
             }
 
             var message = $"Unable to find service discovery provider for {nameof(config.Type)}: '{config.Type}'!";

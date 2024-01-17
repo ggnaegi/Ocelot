@@ -7,12 +7,8 @@ namespace Ocelot.Provider.Consul;
 
 public static class ConsulProviderFactory
 {
-    /// <summary>
-    /// String constant used for provider type definition.
-    /// </summary>
-    public const string PollConsul = nameof(Provider.Consul.PollConsul);
 
-    private static readonly List<PollConsul> ServiceDiscoveryProviders = new();
+    private static readonly List<Consul> ServiceDiscoveryProviders = new();
     private static readonly object LockObject = new();
 
     public static ServiceDiscoveryFinderDelegate Get { get; } = CreateProvider;
@@ -26,24 +22,37 @@ public static class ConsulProviderFactory
         var consulRegistryConfiguration = new ConsulRegistryConfiguration(
             config.Scheme, config.Host, config.Port, route.ServiceName, config.Token);
 
-        var consulProvider = new Consul(consulRegistryConfiguration, factory, consulFactory);
-
-        if (PollConsul.Equals(config.Type, StringComparison.OrdinalIgnoreCase))
+        var pollingOptions = new ConsulPollingOptions
         {
-            lock (LockObject)
-            {
-                var discoveryProvider = ServiceDiscoveryProviders.FirstOrDefault(x => x.ServiceName == route.ServiceName);
-                if (discoveryProvider != null)
-                {
-                    return discoveryProvider;
-                }
-
-                discoveryProvider = new PollConsul(config.PollingInterval, route.ServiceName, factory, consulProvider);
-                ServiceDiscoveryProviders.Add(discoveryProvider);
-                return discoveryProvider;
-            }
-        }
+            PollingInterval = config.PollingInterval,
+            PollingType = GetPollingType(config.Type),
+        };
+        var consulProvider = new Consul(consulRegistryConfiguration, factory, consulFactory, pollingOptions);
 
         return consulProvider;
+
+        /*lock (LockObject)
+        {
+            var discoveryProvider = ServiceDiscoveryProviders.FirstOrDefault(x => x.ServiceName == route.ServiceName);
+            if (discoveryProvider != null)
+            {
+                return discoveryProvider;
+            }
+
+            discoveryProvider = new Consul(consulRegistryConfiguration, factory, consulFactory, );
+
+            ServiceDiscoveryProviders.Add(discoveryProvider);
+            return discoveryProvider;
+        }*/
+    }
+
+    private static ConsulPollingType GetPollingType(string type)
+    {
+        if (type == Enum.GetName(typeof(ConsulPollingType), ConsulPollingType.PollConsul))
+        {
+            return ConsulPollingType.PollConsul;
+        }
+        
+        return type == Enum.GetName(typeof(ConsulPollingType), ConsulPollingType.LongPolling) ? ConsulPollingType.LongPolling : ConsulPollingType.None;
     }
 }

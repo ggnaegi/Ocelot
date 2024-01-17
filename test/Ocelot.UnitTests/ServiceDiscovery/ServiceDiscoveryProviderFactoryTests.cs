@@ -105,7 +105,7 @@ namespace Ocelot.UnitTests.ServiceDiscovery
                 .When(x => x.WhenIGetTheServiceProvider())
                 .Then(x => x.ThenTheResultIsError())
                 .BDDfy();
-        }
+        }*/
 
         [Fact]
         public void Should_return_service_fabric_provider()

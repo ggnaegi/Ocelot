@@ -1,4 +1,7 @@
-﻿using Ocelot.Infrastructure;
+﻿using System.Collections.Immutable;
+using Consul;
+using Moq;
+using Ocelot.Infrastructure;
 using Ocelot.Logging;
 using Ocelot.Provider.Consul;
 using Ocelot.ServiceDiscovery.Providers;
@@ -12,7 +15,7 @@ namespace Ocelot.UnitTests.Consul
         private readonly List<Service> _services;
         private readonly Mock<IOcelotLoggerFactory> _factory;
         private readonly Mock<IOcelotLogger> _logger;
-        private readonly Mock<IServiceDiscoveryProvider> _consulServiceDiscoveryProvider;
+        private readonly Mock<Provider.Consul.Consul> _consulServiceDiscoveryProvider;
         private List<Service> _result;
 
         public PollingConsulServiceDiscoveryProviderTests()
@@ -21,8 +24,16 @@ namespace Ocelot.UnitTests.Consul
             _delay = 1;
             _factory = new Mock<IOcelotLoggerFactory>();
             _logger = new Mock<IOcelotLogger>();
-            _factory.Setup(x => x.CreateLogger<PollConsul>()).Returns(_logger.Object);
-            _consulServiceDiscoveryProvider = new Mock<IServiceDiscoveryProvider>();
+            _factory.Setup(x => x.CreateLogger<Provider.Consul.Consul>()).Returns(_logger.Object);
+
+            var consulClientFactory = new Mock<IConsulClientFactory>();
+            var consulClient = new Mock<IConsulClient>();
+            consulClientFactory.Setup(x => x.Get(It.IsAny<ConsulRegistryConfiguration>())).Returns(consulClient.Object);
+            _consulServiceDiscoveryProvider = new Mock<Provider.Consul.Consul>(new ConsulRegistryConfiguration("http", "localhost", 80, "test", null), _factory.Object, consulClientFactory.Object, new ConsulPollingOptions
+            {
+                PollingInterval = _delay,
+                PollingType = ConsulPollingType.PollConsul,
+            }) { CallBase = true };
         }
 
         [Fact]
@@ -50,7 +61,8 @@ namespace Ocelot.UnitTests.Consul
         private void GivenConsulReturns(Service service)
         {
             _services.Add(service);
-            _consulServiceDiscoveryProvider.Setup(x => x.GetAsync()).ReturnsAsync(_services);
+            ulong waitIndex = 0;
+            _consulServiceDiscoveryProvider.Setup(x => x.RetrieveServiceListFromConsulAsync(waitIndex)).ReturnsAsync((_services.ToImmutableList(), waitIndex));
         }
 
         private void ThenTheCountIs(int count)
@@ -60,12 +72,11 @@ namespace Ocelot.UnitTests.Consul
 
         private void WhenIGetTheServices(int expected)
         {
-            var provider = new PollConsul(_delay, "test", _factory.Object, _consulServiceDiscoveryProvider.Object);
             var result = Wait.WaitFor(3000).Until(() =>
             {
                 try
                 {
-                    _result = provider.GetAsync().GetAwaiter().GetResult();
+                    _result = _consulServiceDiscoveryProvider.Object.GetAsync().GetAwaiter().GetResult();
                     return _result.Count == expected;
                 }
                 catch (Exception)
@@ -79,11 +90,10 @@ namespace Ocelot.UnitTests.Consul
 
         private void WhenIGetTheServicesWithoutDelay(int expected)
         {
-            var provider = new PollConsul(_delay, "test2", _factory.Object, _consulServiceDiscoveryProvider.Object);
             bool result;
             try
             {
-                _result = provider.GetAsync().GetAwaiter().GetResult();
+                _result = _consulServiceDiscoveryProvider.Object.GetAsync().GetAwaiter().GetResult();
                 result = _result.Count == expected;
             }
             catch (Exception)

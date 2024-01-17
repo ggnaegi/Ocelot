@@ -38,9 +38,12 @@ namespace Ocelot.UnitTests.Consul
             _clientFactory = new ConsulClientFactory();
             _logger = new Mock<IOcelotLogger>();
             _factory.Setup(x => x.CreateLogger<ConsulProvider>()).Returns(_logger.Object);
-            _factory.Setup(x => x.CreateLogger<PollConsul>()).Returns(_logger.Object);
             var config = new ConsulRegistryConfiguration(_consulScheme, _consulHost, _port, _serviceName, null);
-            _provider = new ConsulProvider(config, _factory.Object, _clientFactory);
+            _provider = new ConsulProvider(config, _factory.Object, _clientFactory, new ConsulPollingOptions
+            {
+                PollingInterval = 0,
+                PollingType = ConsulPollingType.None,
+            });
         }
 
         [Fact]
@@ -70,7 +73,11 @@ namespace Ocelot.UnitTests.Consul
         {
             var token = "test token";
             var config = new ConsulRegistryConfiguration(_consulScheme, _consulHost, _port, _serviceName, token);
-            _provider = new ConsulProvider(config, _factory.Object, _clientFactory);
+            _provider = new ConsulProvider(config, _factory.Object, _clientFactory, new ConsulPollingOptions
+            {
+                PollingInterval = 0,
+                PollingType = ConsulPollingType.None,
+            });
 
             var serviceEntryOne = new ServiceEntry
             {
