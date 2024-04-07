@@ -7,83 +7,118 @@ using System.Threading;
 
 namespace Ocelot.Provider.Consul;
 
-public class Consul : IServiceDiscoveryProvider
+public class Consul : IServiceDiscoveryProvider, IDisposable
 {
     private const string VersionPrefix = "version-";
     private readonly ConsulRegistryConfiguration _config;
     private readonly IConsulClient _consul;
     private readonly IOcelotLogger _logger;
-    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
     private ImmutableList<Service> _services;
-    private readonly ConsulPollingOptions _consulProviderOptions;
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    public Consul(ConsulRegistryConfiguration config, IOcelotLoggerFactory factory, IConsulClientFactory clientFactory, ConsulPollingOptions consulProviderOptions)
+    private CancellationTokenSource _cancellationTokenSource;
+
+    public Consul(ConsulRegistryConfiguration config, IOcelotLoggerFactory factory, IConsulClientFactory clientFactory)
     {
         _config = config;
         _consul = clientFactory.Get(_config);
         _logger = factory.CreateLogger<Consul>();
-        _consulProviderOptions = consulProviderOptions;
     }
 
     public async Task<List<Service>> GetAsync()
     {
-        await _semaphoreSlim.WaitAsync();
+        // getting the services using the polling and long polling mechanisms
+        if (_config.PollingType() != ConsulPollingType.None)
+        {
+            return await GetFromPollingAsync();
+        }
+
+        // if no polling, get the services from consul directly
+        var (services, _) = await RetrieveServiceListFromConsulAsync(0);
+        return [.. services];
+    }
+
+    public string ServiceName => _config.KeyOfServiceInConsul;
+
+    /// <summary>
+    /// Retrieving the services list from consul using polling.
+    /// It can be done using either polling or long polling.
+    /// If polling is enabled, it will poll the services list from consul at a regular interval.
+    /// If long polling is enabled, it will poll the services list from consul and wait for the next change.
+    /// The timeout of the long polling is configured in consul, the wait time is 5 minutes by default.
+    /// </summary>
+    /// <returns>The services list.</returns>
+    private async Task<List<Service>> GetFromPollingAsync()
+    {
+        await _semaphore.WaitAsync();
         try
         {
             if (_services != null)
             {
-                return[.. _services];
+                return [.. _services];
             }
 
             (_services, var initialWaitIndex) = await RetrieveServiceListFromConsulAsync(0);
 
             ConfigurePollingType(initialWaitIndex);
-            
-            return[.. _services];
+
+            return [.. _services];
         }
         finally
         {
-            _semaphoreSlim.Release();
+            _semaphore.Release();
         }
     }
 
-    public string ServiceName => _config.KeyOfServiceInConsul;
-
+    /// <summary>
+    /// Configure the polling type.
+    /// </summary>
+    /// <param name="initialWaitIndex">This is a key returned by consul and used for the long polling.</param>
     private void ConfigurePollingType(ulong initialWaitIndex)
     {
-        switch (_consulProviderOptions.PollingType)
-        {
-            case ConsulPollingType.None:
-                return;
-            case ConsulPollingType.LongPolling:
-                _ = LongPollingServiceListAsync(initialWaitIndex);
-                return;
-            case ConsulPollingType.PollConsul:
-            default:
-                _ = new Timer(_ =>
-                {
-                    (_services, var waitIndex) = RetrieveServiceListFromConsulAsync(0).Result;
-                }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(_consulProviderOptions.PollingInterval));
-                break;
-        }
+        _cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = _cancellationTokenSource.Token;
+
+        Task.Run(() => PollingServicesListAsync(initialWaitIndex, 
+            _config.PollingType() == ConsulPollingType.PollConsul ? _config.PollingInterval: null, cancellationToken), 
+            cancellationToken);
     }
 
-    private async Task LongPollingServiceListAsync(ulong initialWaitIndex)
+    /// <summary>
+    /// Polling the services list from consul.
+    /// If the polling interval is not null, it will poll the services list at a regular interval,
+    /// otherwise it will poll the services list and wait for the next change.
+    /// </summary>
+    /// <param name="initialWaitIndex">This is a key returned by consul and used for the long polling.</param>
+    /// <param name="pollingInterval">The polling interval in ms.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    private async Task PollingServicesListAsync(ulong initialWaitIndex, int? pollingInterval, CancellationToken cancellationToken)
     {
         var waitIndex = initialWaitIndex;
-        while (true)
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                (_services, waitIndex) = await RetrieveServiceListFromConsulAsync(waitIndex);
+                if (pollingInterval.HasValue)
+                {
+                    await Task.Delay(pollingInterval.Value, cancellationToken);
+                }
+
+                (_services, waitIndex) = await RetrieveServiceListFromConsulAsync(pollingInterval.HasValue ? 0 : waitIndex);
             }
             catch (Exception ex)
             {
-                _logger.LogError(() => $"Error in long polling: {ex.Message}", ex);
+                _logger.LogError(() => $"Error in polling: {ex.Message}", ex);
             }
         }
     }
 
+    /// <summary>
+    /// Retrieve the services list from consul.
+    /// If the waitIndex is 0, it will retrieve the services list without waiting for the next change.
+    /// </summary>
+    /// <param name="waitIndex">The current key returned by consul for the long polling.</param>
+    /// <returns>The current service list and the updated wait index.</returns>
     public virtual async Task<(ImmutableList<Service> ServiceList, ulong WaitIndex)> RetrieveServiceListFromConsulAsync(ulong waitIndex)
     {
         var queryResult = await _consul.Health.Service(_config.KeyOfServiceInConsul, string.Empty, true, new QueryOptions
@@ -140,4 +175,21 @@ public class Consul : IServiceDiscoveryProvider
     private static string GetVersionFromStrings(IEnumerable<string> strings)
         => strings?.FirstOrDefault(x => x.StartsWith(VersionPrefix, StringComparison.Ordinal))
             .TrimStart(VersionPrefix);
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposing)
+        {
+            return;
+        }
+
+        _cancellationTokenSource?.Cancel();
+        _consul?.Dispose();
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 }

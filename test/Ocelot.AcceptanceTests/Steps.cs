@@ -914,45 +914,36 @@ public class Steps : IDisposable
 
     public void WhenIGetUrlOnTheApiGatewayMultipleTimes(string url, int times)
     {
-        var tasks = new Task[times];
-
         for (var i = 0; i < times; i++)
         {
-            var urlCopy = url;
-            tasks[i] = GetForServiceDiscoveryTest(urlCopy);
+            GetForServiceDiscoveryTest(url);
             Thread.Sleep(_random.Next(40, 60));
         }
-
-        Task.WaitAll(tasks);
     }
 
     public void WhenIGetUrlOnTheApiGatewayMultipleTimes(string url, int times, string cookie, string value)
     {
-        var tasks = new Task[times];
-
         for (var i = 0; i < times; i++)
         {
-            tasks[i] = GetForServiceDiscoveryTest(url, cookie, value);
+            GetForServiceDiscoveryTest(url, cookie, value);
             Thread.Sleep(_random.Next(40, 60));
         }
-
-        Task.WaitAll(tasks);
     }
 
-    private async Task GetForServiceDiscoveryTest(string url, string cookie, string value)
+    private void GetForServiceDiscoveryTest(string url, string cookie, string value)
     {
         var request = _ocelotServer.CreateRequest(url);
         request.And(x => { x.Headers.Add("Cookie", new CookieHeaderValue(cookie, value).ToString()); });
-        var response = await request.GetAsync();
-        var content = await response.Content.ReadAsStringAsync();
+        var response = request.GetAsync().Result;
+        var content = response.Content.ReadAsStringAsync().Result;
         var count = int.Parse(content);
         count.ShouldBeGreaterThan(0);
     }
 
-    private async Task GetForServiceDiscoveryTest(string url)
+    private void GetForServiceDiscoveryTest(string url)
     {
-        var response = await _ocelotClient.GetAsync(url);
-        var content = await response.Content.ReadAsStringAsync();
+        var response = _ocelotClient.GetAsync(url).Result;
+        var content = response.Content.ReadAsStringAsync().Result;
         var count = int.Parse(content);
         count.ShouldBeGreaterThan(0);
     }

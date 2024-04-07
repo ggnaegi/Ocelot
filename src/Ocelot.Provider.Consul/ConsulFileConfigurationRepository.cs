@@ -32,7 +32,7 @@ public class ConsulFileConfigurationRepository : IFileConfigurationRepository
             : provider.ConfigurationKey;
 
         var config = new ConsulRegistryConfiguration(provider.Scheme, provider.Host,
-            provider.Port, _configurationKey, provider.Token);
+            provider.Port, _configurationKey, provider.Token, nameof(Consul), 0);
         _consul = factory.Get(config);
     }
 

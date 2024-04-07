@@ -29,11 +29,7 @@ namespace Ocelot.UnitTests.Consul
             var consulClientFactory = new Mock<IConsulClientFactory>();
             var consulClient = new Mock<IConsulClient>();
             consulClientFactory.Setup(x => x.Get(It.IsAny<ConsulRegistryConfiguration>())).Returns(consulClient.Object);
-            _consulServiceDiscoveryProvider = new Mock<Provider.Consul.Consul>(new ConsulRegistryConfiguration("http", "localhost", 80, "test", null), _factory.Object, consulClientFactory.Object, new ConsulPollingOptions
-            {
-                PollingInterval = _delay,
-                PollingType = ConsulPollingType.PollConsul,
-            }) { CallBase = true };
+            _consulServiceDiscoveryProvider = new Mock<Provider.Consul.Consul>(new ConsulRegistryConfiguration("http", "localhost", 80, "test", null, "PollConsul", _delay), _factory.Object, consulClientFactory.Object) { CallBase = true };
         }
 
         [Fact]

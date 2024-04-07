@@ -10,13 +10,15 @@ public class ConsulRegistryConfiguration
     /// </summary>
     public const int DefaultHttpPort = 8500;
 
-    public ConsulRegistryConfiguration(string scheme, string host, int port, string keyOfServiceInConsul, string token)
+    public ConsulRegistryConfiguration(string scheme, string host, int port, string keyOfServiceInConsul, string token, string type, int pollingInterval)
     {
         Host = string.IsNullOrEmpty(host) ? "localhost" : host;
         Port = port > 0 ? port : DefaultHttpPort;
         Scheme = string.IsNullOrEmpty(scheme) ? Uri.UriSchemeHttp : scheme;
         KeyOfServiceInConsul = keyOfServiceInConsul;
         Token = token;
+        PollingInterval = pollingInterval;
+        Type = type;
     }
 
     public string KeyOfServiceInConsul { get; }
@@ -24,4 +26,12 @@ public class ConsulRegistryConfiguration
     public string Host { get; }
     public int Port { get; }
     public string Token { get; }
+    public int PollingInterval { get; }
+    public string Type { get; }
+    public ConsulPollingType PollingType() => Type switch
+    {
+        nameof(ConsulPollingType.PollConsul) => ConsulPollingType.PollConsul,
+        nameof(ConsulPollingType.LongPolling) => ConsulPollingType.LongPolling,
+        _ => ConsulPollingType.None,
+    };
 }

@@ -2,6 +2,6 @@
 
 public record ConsulPollingOptions
 {
-    public ConsulPollingType PollingType { get; init; }
-    public int PollingInterval { get; init; }
+    public ConsulPollingType PollingType { get; init; } = ConsulPollingType.None;
+    public int PollingInterval { get; init; } = 0;
 }

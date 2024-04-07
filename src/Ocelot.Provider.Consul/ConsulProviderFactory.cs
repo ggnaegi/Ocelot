@@ -7,8 +7,7 @@ namespace Ocelot.Provider.Consul;
 
 public static class ConsulProviderFactory
 {
-
-    private static readonly List<Consul> ServiceDiscoveryProviders = new();
+    private static readonly List<Consul> ServiceDiscoveryProviders = [];
     private static readonly object LockObject = new();
 
     public static ServiceDiscoveryFinderDelegate Get { get; } = CreateProvider;
@@ -20,18 +19,15 @@ public static class ConsulProviderFactory
         var consulFactory = provider.GetService<IConsulClientFactory>();
 
         var consulRegistryConfiguration = new ConsulRegistryConfiguration(
-            config.Scheme, config.Host, config.Port, route.ServiceName, config.Token);
+            config.Scheme, config.Host, config.Port, route.ServiceName, config.Token, config.Type,
+            config.PollingInterval);
 
-        var pollingOptions = new ConsulPollingOptions
+        if (consulRegistryConfiguration.PollingType() == ConsulPollingType.None)
         {
-            PollingInterval = config.PollingInterval,
-            PollingType = GetPollingType(config.Type),
-        };
-        var consulProvider = new Consul(consulRegistryConfiguration, factory, consulFactory, pollingOptions);
+            return new Consul(consulRegistryConfiguration, factory, consulFactory);
+        }
 
-        return consulProvider;
-
-        /*lock (LockObject)
+        lock (LockObject)
         {
             var discoveryProvider = ServiceDiscoveryProviders.FirstOrDefault(x => x.ServiceName == route.ServiceName);
             if (discoveryProvider != null)
@@ -39,20 +35,9 @@ public static class ConsulProviderFactory
                 return discoveryProvider;
             }
 
-            discoveryProvider = new Consul(consulRegistryConfiguration, factory, consulFactory, );
-
+            discoveryProvider = new Consul(consulRegistryConfiguration, factory, consulFactory);
             ServiceDiscoveryProviders.Add(discoveryProvider);
             return discoveryProvider;
-        }*/
-    }
-
-    private static ConsulPollingType GetPollingType(string type)
-    {
-        if (type == Enum.GetName(typeof(ConsulPollingType), ConsulPollingType.PollConsul))
-        {
-            return ConsulPollingType.PollConsul;
         }
-        
-        return type == Enum.GetName(typeof(ConsulPollingType), ConsulPollingType.LongPolling) ? ConsulPollingType.LongPolling : ConsulPollingType.None;
     }
 }

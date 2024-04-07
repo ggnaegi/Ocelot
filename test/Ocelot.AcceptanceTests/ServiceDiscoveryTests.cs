@@ -115,7 +115,7 @@ namespace Ocelot.AcceptanceTests
                     Address = "localhost",
                     Port = servicePort,
                     ID = "web_90_0_2_224_8080",
-                    Tags = new[] { "version-v1" },
+                    Tags = ["version-v1"],
                 },
             };
 

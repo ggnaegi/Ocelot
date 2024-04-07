@@ -14,6 +14,12 @@ namespace Ocelot.ServiceDiscovery
         private readonly ServiceDiscoveryFinderDelegate _delegates;
         private readonly IOcelotLogger _logger;
 
+        // TODO: This should be refactored, the service discovery providers types are not known upfront.
+        public const string ServiceFabric = "ServiceFabric";
+        public const string Consul = "Consul";
+        public const string PollConsul = "PollConsul";
+        public const string LongPolling = "LongPolling";
+
         public ServiceDiscoveryProviderFactory(IOcelotLoggerFactory factory, IServiceProvider provider)
         {
             _provider = provider;
@@ -46,23 +52,42 @@ namespace Ocelot.ServiceDiscovery
         {
             _logger.LogInformation(() => $"Getting service discovery provider of {nameof(config.Type)} '{config.Type}'...");
 
-            if (config.Type != null && config.Type.Equals("servicefabric", StringComparison.OrdinalIgnoreCase))
+            if (config.Type != null && config.Type.Equals(ServiceFabric, StringComparison.OrdinalIgnoreCase))
             {
                 var sfConfig = new ServiceFabricConfiguration(config.Host, config.Port, route.ServiceName);
                 return new OkResponse<IServiceDiscoveryProvider>(new ServiceFabricServiceDiscoveryProvider(sfConfig));
             }
 
-            var provider = _delegates?.Invoke(_provider, config, route);
-
-            if (provider != null)
+            if (_delegates != null)
             {
-                return new OkResponse<IServiceDiscoveryProvider>(provider);
+                var provider = _delegates?.Invoke(_provider, config, route);
+                if (string.Equals(provider?.GetType().Name, config.Type, StringComparison.OrdinalIgnoreCase) || IsConsulProvider(provider, config))
+                {
+                    return new OkResponse<IServiceDiscoveryProvider>(provider);
+                }
             }
 
             var message = $"Unable to find service discovery provider for {nameof(config.Type)}: '{config.Type}'!";
             _logger.LogWarning(() => $"Unable to find service discovery provider for {nameof(config.Type)}: '{config.Type}'!");
-
             return new ErrorResponse<IServiceDiscoveryProvider>(new UnableToFindServiceDiscoveryProviderError(message));
+        }
+
+        /// <summary>
+        /// Method to verify if the provider is consul and if the polling type is known.
+        /// TODO: this should be refactored in the future, probably by adding a method to IServiceDiscoveryProvider.
+        /// </summary>
+        /// <param name="provider">The provider that should be verified.</param>
+        /// <param name="config">The service provider configuration.</param>
+        /// <returns>True if the provider is consul and polling type has been verified.</returns>
+        private static bool IsConsulProvider(IServiceDiscoveryProvider provider, ServiceProviderConfiguration config)
+        {
+            var isConsulProvider = string.Equals(provider?.GetType().Name, Consul, StringComparison.OrdinalIgnoreCase);
+            var typeMatchesConfig = config.Type != null && (
+                config.Type.Equals(Consul, StringComparison.OrdinalIgnoreCase) ||
+                config.Type.Equals(PollConsul, StringComparison.OrdinalIgnoreCase) ||
+                config.Type.Equals(LongPolling, StringComparison.OrdinalIgnoreCase));
+
+            return isConsulProvider && typeMatchesConfig;
         }
     }
 }
