@@ -16,6 +16,7 @@ namespace Ocelot.AcceptanceTests
         private static readonly object SyncLock = new();
         private string _downstreamPath;
         private string _receivedToken;
+        private string _waitIndex;
         private readonly ServiceHandler _serviceHandler;
         private readonly ServiceHandler _serviceHandler2;
         private readonly ServiceHandler _consulHandler;
@@ -64,18 +65,19 @@ namespace Ocelot.AcceptanceTests
 
             var configuration = new FileConfiguration
             {
-                Routes = new List<FileRoute>
+                Routes =
+                [
+                    new FileRoute
                     {
-                        new()
-                        {
-                            DownstreamPathTemplate = "/",
-                            DownstreamScheme = "http",
-                            UpstreamPathTemplate = "/",
-                            UpstreamHttpMethod = new List<string> { "Get" },
-                            ServiceName = serviceName,
-                            LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
-                        },
-                    },
+                        DownstreamPathTemplate = "/",
+                        DownstreamScheme = "http",
+                        UpstreamPathTemplate = "/",
+                        UpstreamHttpMethod = ["Get"],
+                        ServiceName = serviceName,
+                        LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
+                    }
+
+                ],
                 GlobalConfiguration = new FileGlobalConfiguration
                 {
                     ServiceDiscoveryProvider = new FileServiceDiscoveryProvider
@@ -121,18 +123,19 @@ namespace Ocelot.AcceptanceTests
 
             var configuration = new FileConfiguration
             {
-                Routes = new List<FileRoute>
+                Routes =
+                [
+                    new FileRoute
                     {
-                        new()
-                        {
-                            DownstreamPathTemplate = "/api/home",
-                            DownstreamScheme = "http",
-                            UpstreamPathTemplate = "/home",
-                            UpstreamHttpMethod = new List<string> { "Get", "Options" },
-                            ServiceName = serviceName,
-                            LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
-                        },
-                    },
+                        DownstreamPathTemplate = "/api/home",
+                        DownstreamScheme = "http",
+                        UpstreamPathTemplate = "/home",
+                        UpstreamHttpMethod = ["Get", "Options"],
+                        ServiceName = serviceName,
+                        LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
+                    }
+
+                ],
                 GlobalConfiguration = new FileGlobalConfiguration
                 {
                     ServiceDiscoveryProvider = new FileServiceDiscoveryProvider
@@ -144,15 +147,16 @@ namespace Ocelot.AcceptanceTests
                 },
             };
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn(downstreamServiceOneUrl, "/api/home", 200, "Hello from Laura"))
-            .And(x => x.GivenThereIsAFakeConsulServiceDiscoveryProvider(fakeConsulServiceDiscoveryUrl))
-            .And(x => x.GivenTheServicesAreRegisteredWithConsul(serviceEntryOne))
-            .And(x => _steps.GivenThereIsAConfiguration(configuration))
-            .And(x => _steps.GivenOcelotIsRunningWithConsul())
-            .When(x => _steps.WhenIGetUrlOnTheApiGateway("/home"))
-            .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
-            .And(x => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
-            .BDDfy();
+            this.Given(x =>
+                    x.GivenThereIsAServiceRunningOn(downstreamServiceOneUrl, "/api/home", 200, "Hello from Laura"))
+                .And(x => x.GivenThereIsAFakeConsulServiceDiscoveryProvider(fakeConsulServiceDiscoveryUrl))
+                .And(x => x.GivenTheServicesAreRegisteredWithConsul(serviceEntryOne))
+                .And(x => _steps.GivenThereIsAConfiguration(configuration))
+                .And(x => _steps.GivenOcelotIsRunningWithConsul())
+                .When(x => _steps.WhenIGetUrlOnTheApiGateway("/home"))
+                .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
+                .And(x => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
+                .BDDfy();
         }
 
         [Fact]
@@ -195,15 +199,16 @@ namespace Ocelot.AcceptanceTests
                 },
             };
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn(downstreamServiceOneUrl, "/something", 200, "Hello from Laura"))
-            .And(x => x.GivenThereIsAFakeConsulServiceDiscoveryProvider(fakeConsulServiceDiscoveryUrl))
-            .And(x => x.GivenTheServicesAreRegisteredWithConsul(serviceEntryOne))
-            .And(x => _steps.GivenThereIsAConfiguration(configuration))
-            .And(x => _steps.GivenOcelotIsRunningWithConsul())
-            .When(x => _steps.WhenIGetUrlOnTheApiGateway("/web/something"))
-            .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
-            .And(x => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
-            .BDDfy();
+            this.Given(x =>
+                    x.GivenThereIsAServiceRunningOn(downstreamServiceOneUrl, "/something", 200, "Hello from Laura"))
+                .And(x => x.GivenThereIsAFakeConsulServiceDiscoveryProvider(fakeConsulServiceDiscoveryUrl))
+                .And(x => x.GivenTheServicesAreRegisteredWithConsul(serviceEntryOne))
+                .And(x => _steps.GivenThereIsAConfiguration(configuration))
+                .And(x => _steps.GivenOcelotIsRunningWithConsul())
+                .When(x => _steps.WhenIGetUrlOnTheApiGateway("/web/something"))
+                .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
+                .And(x => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
+                .BDDfy();
         }
 
         [Fact]
@@ -267,7 +272,7 @@ namespace Ocelot.AcceptanceTests
         }
 
         [Fact]
-        public void should_use_token_to_make_request_to_consul()
+        public void Should_use_token_to_make_request_to_consul()
         {
             var token = "abctoken";
             var consulPort = PortFinder.GetRandomPort();
@@ -289,18 +294,19 @@ namespace Ocelot.AcceptanceTests
 
             var configuration = new FileConfiguration
             {
-                Routes = new List<FileRoute>
+                Routes =
+                [
+                    new FileRoute
                     {
-                        new()
-                        {
-                            DownstreamPathTemplate = "/api/home",
-                            DownstreamScheme = "http",
-                            UpstreamPathTemplate = "/home",
-                            UpstreamHttpMethod = new List<string> { "Get", "Options" },
-                            ServiceName = serviceName,
-                            LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
-                        },
-                    },
+                        DownstreamPathTemplate = "/api/home",
+                        DownstreamScheme = "http",
+                        UpstreamPathTemplate = "/home",
+                        UpstreamHttpMethod = ["Get", "Options"],
+                        ServiceName = serviceName,
+                        LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
+                    }
+
+                ],
                 GlobalConfiguration = new FileGlobalConfiguration
                 {
                     ServiceDiscoveryProvider = new FileServiceDiscoveryProvider
@@ -313,7 +319,8 @@ namespace Ocelot.AcceptanceTests
                 },
             };
 
-            this.Given(_ => GivenThereIsAServiceRunningOn(downstreamServiceOneUrl, "/api/home", 200, "Hello from Laura"))
+            this.Given(
+                    _ => GivenThereIsAServiceRunningOn(downstreamServiceOneUrl, "/api/home", 200, "Hello from Laura"))
                 .And(_ => GivenThereIsAFakeConsulServiceDiscoveryProvider(fakeConsulServiceDiscoveryUrl))
                 .And(_ => GivenTheServicesAreRegisteredWithConsul(serviceEntryOne))
                 .And(_ => _steps.GivenThereIsAConfiguration(configuration))
@@ -322,6 +329,71 @@ namespace Ocelot.AcceptanceTests
                 .Then(_ => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
                 .And(_ => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
                 .And(_ => ThenTheTokenIs(token))
+                .BDDfy();
+        }
+
+        [Fact]
+        public void Should_send_the_wait_index_header_to_consul()
+        {
+            var consulPort = PortFinder.GetRandomPort();
+            var serviceName = "web";
+            var servicePort = PortFinder.GetRandomPort();
+            var downstreamServiceOneUrl = $"http://localhost:{servicePort}";
+            var fakeConsulServiceDiscoveryUrl = $"http://localhost:{consulPort}";
+            var serviceEntryOne = new ServiceEntry
+            {
+                Service = new AgentService
+                {
+                    Service = serviceName,
+                    Address = "localhost",
+                    Port = servicePort,
+                    ID = "web_90_0_2_224_8080",
+                    Tags = ["version-v1"],
+                },
+            };
+
+            var configuration = new FileConfiguration
+            {
+                Routes =
+                [
+                    new FileRoute
+                    {
+                        DownstreamPathTemplate = "/api/home",
+                        DownstreamScheme = "http",
+                        UpstreamPathTemplate = "/home",
+                        UpstreamHttpMethod = ["Get", "Options"],
+                        ServiceName = serviceName,
+                        LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
+                    }
+
+                ],
+                GlobalConfiguration = new FileGlobalConfiguration
+                {
+                    ServiceDiscoveryProvider = new FileServiceDiscoveryProvider
+                    {
+                        Scheme = "http",
+                        Host = "localhost",
+                        Port = consulPort,
+                        Type = "LongPolling",
+                        PollingInterval = 0,
+                        Namespace = string.Empty,
+                    },
+                },
+            };
+
+            this.Given(
+                    _ => GivenThereIsAServiceRunningOn(downstreamServiceOneUrl, "/api/home", 200, "Hello from Laura"))
+                .And(_ => GivenThereIsAFakeConsulServiceDiscoveryProvider(fakeConsulServiceDiscoveryUrl))
+                .And(_ => GivenTheServicesAreRegisteredWithConsul(serviceEntryOne))
+                .And(_ => _steps.GivenThereIsAConfiguration(configuration))
+                .And(_ => _steps.GivenOcelotIsRunningWithConsul())
+                .When(_ => _steps.WhenIGetUrlOnTheApiGateway("/home"))
+                .Then(_ => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
+                .And(_ => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
+                .When(_ => _steps.WhenIGetUrlOnTheApiGateway("/home"))
+                .Then(_ => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
+                .And(_ => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
+                .And(_ => ThenTheWaitIndexShouldBe("10"))
                 .BDDfy();
         }
 
@@ -360,18 +432,19 @@ namespace Ocelot.AcceptanceTests
 
             var configuration = new FileConfiguration
             {
-                Routes = new List<FileRoute>
+                Routes =
+                [
+                    new FileRoute
                     {
-                        new()
-                        {
-                            DownstreamPathTemplate = "/",
-                            DownstreamScheme = "http",
-                            UpstreamPathTemplate = "/",
-                            UpstreamHttpMethod = new List<string> { "Get" },
-                            ServiceName = serviceName,
-                            LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
-                        },
-                    },
+                        DownstreamPathTemplate = "/",
+                        DownstreamScheme = "http",
+                        UpstreamPathTemplate = "/",
+                        UpstreamHttpMethod = ["Get"],
+                        ServiceName = serviceName,
+                        LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
+                    }
+
+                ],
                 GlobalConfiguration = new FileGlobalConfiguration
                 {
                     ServiceDiscoveryProvider = new FileServiceDiscoveryProvider
@@ -426,18 +499,19 @@ namespace Ocelot.AcceptanceTests
 
             var configuration = new FileConfiguration
             {
-                Routes = new List<FileRoute>
+                Routes =
+                [
+                    new FileRoute
                     {
-                        new()
-                        {
-                            DownstreamPathTemplate = "/api/home",
-                            DownstreamScheme = "http",
-                            UpstreamPathTemplate = "/home",
-                            UpstreamHttpMethod = new List<string> { "Get", "Options" },
-                            ServiceName = serviceName,
-                            LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
-                        },
-                    },
+                        DownstreamPathTemplate = "/api/home",
+                        DownstreamScheme = "http",
+                        UpstreamPathTemplate = "/home",
+                        UpstreamHttpMethod = ["Get", "Options"],
+                        ServiceName = serviceName,
+                        LoadBalancerOptions = new FileLoadBalancerOptions { Type = "LeastConnection" },
+                    }
+
+                ],
                 GlobalConfiguration = new FileGlobalConfiguration
                 {
                     ServiceDiscoveryProvider = new FileServiceDiscoveryProvider
@@ -452,15 +526,16 @@ namespace Ocelot.AcceptanceTests
                 },
             };
 
-            this.Given(x => x.GivenThereIsAServiceRunningOn(downstreamServiceOneUrl, "/api/home", 200, "Hello from Laura"))
-            .And(x => x.GivenThereIsAFakeConsulServiceDiscoveryProvider(fakeConsulServiceDiscoveryUrl))
-            .And(x => x.GivenTheServicesAreRegisteredWithConsul(serviceEntryOne))
-            .And(x => _steps.GivenThereIsAConfiguration(configuration))
-            .And(x => _steps.GivenOcelotIsRunningWithConsul())
+            this.Given(x =>
+                    x.GivenThereIsAServiceRunningOn(downstreamServiceOneUrl, "/api/home", 200, "Hello from Laura"))
+                .And(x => x.GivenThereIsAFakeConsulServiceDiscoveryProvider(fakeConsulServiceDiscoveryUrl))
+                .And(x => x.GivenTheServicesAreRegisteredWithConsul(serviceEntryOne))
+                .And(x => _steps.GivenThereIsAConfiguration(configuration))
+                .And(x => _steps.GivenOcelotIsRunningWithConsul())
                 .When(x => _steps.WhenIGetUrlOnTheApiGatewayWaitingForTheResponseToBeOk("/home"))
-            .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
-            .And(x => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
-            .BDDfy();
+                .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
+                .And(x => _steps.ThenTheResponseBodyShouldBe("Hello from Laura"))
+                .BDDfy();
         }
 
         [Theory]
@@ -550,8 +625,11 @@ namespace Ocelot.AcceptanceTests
 
             // Ocelot request for http://us-shop/ should find 'product-us' in Consul, call /products and return "Phone chargers with US plug"
             // Ocelot request for http://eu-shop/ should find 'product-eu' in Consul, call /products and return "Phone chargers with EU plug"
-            this.Given(x => x._serviceHandler.GivenThereIsAServiceRunningOn(downstreamServiceUrlUS, "/products", MapGet("/products", responseBodyUS)))
-                .And(x => x._serviceHandler2.GivenThereIsAServiceRunningOn(downstreamServiceUrlEU, "/products", MapGet("/products", responseBodyEU)))
+            this.Given(x =>
+                    x._serviceHandler.GivenThereIsAServiceRunningOn(downstreamServiceUrlUS, "/products",
+                        MapGet("/products", responseBodyUS)))
+                .And(x => x._serviceHandler2.GivenThereIsAServiceRunningOn(downstreamServiceUrlEU, "/products",
+                    MapGet("/products", responseBodyEU)))
                 .And(x => x.GivenThereIsAFakeConsulServiceDiscoveryProvider(fakeConsulServiceDiscoveryUrl))
                 .And(x => x.GivenTheServicesAreRegisteredWithConsul(serviceEntryUS, serviceEntryEU))
                 .And(x => _steps.GivenThereIsAConfiguration(configuration))
@@ -573,6 +651,11 @@ namespace Ocelot.AcceptanceTests
                 .And(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.OK))
                 .And(x => _steps.ThenTheResponseBodyShouldBe(responseBodyEU))
                 .BDDfy();
+        }
+
+        private void ThenTheWaitIndexShouldBe(string waitIndex)
+        {
+            _waitIndex.ShouldBe(waitIndex);
         }
 
         private void ThenTheTokenIs(string token)
@@ -632,6 +715,12 @@ namespace Ocelot.AcceptanceTests
                     _receivedToken = values.First();
                 }
 
+                // Check if the request contains the wait index query parameter
+                if (context.Request.Query.TryGetValue("index", out var waitIndex))
+                {
+                    _waitIndex = waitIndex;
+                }
+
                 // Parse the request path to get the service name
                 var pathMatch = Regex.Match(context.Request.Path.Value, "/v1/health/service/(?<serviceName>[^/]+)");
                 if (pathMatch.Success)
@@ -642,6 +731,10 @@ namespace Ocelot.AcceptanceTests
                     var serviceName = pathMatch.Groups["serviceName"].Value;
                     var services = _consulServices.Where(x => x.Service.Service == serviceName).ToList();
                     var json = JsonConvert.SerializeObject(services);
+
+                    // Adding the X-Consul-Index header to simulate the Consul long polling
+                    context.Response.Headers.Append("X-Consul-Index", "10");
+                    
                     context.Response.Headers.Append("Content-Type", "application/json");
                     await context.Response.WriteAsync(json);
                 }
@@ -703,12 +796,14 @@ namespace Ocelot.AcceptanceTests
         {
             _serviceHandler.GivenThereIsAServiceRunningOn(baseUrl, basePath, async context =>
             {
-                _downstreamPath = !string.IsNullOrEmpty(context.Request.PathBase.Value) ? context.Request.PathBase.Value : context.Request.Path.Value;
+                _downstreamPath = !string.IsNullOrEmpty(context.Request.PathBase.Value)
+                    ? context.Request.PathBase.Value
+                    : context.Request.Path.Value;
 
                 if (_downstreamPath != basePath)
                 {
                     context.Response.StatusCode = statusCode;
-                    await context.Response.WriteAsync("downstream path didnt match base path");
+                    await context.Response.WriteAsync("downstream path didn't match base path");
                 }
                 else
                 {
@@ -720,7 +815,9 @@ namespace Ocelot.AcceptanceTests
 
         private RequestDelegate MapGet(string path, string responseBody) => async context =>
         {
-            var downstreamPath = !string.IsNullOrEmpty(context.Request.PathBase.Value) ? context.Request.PathBase.Value : context.Request.Path.Value;
+            var downstreamPath = !string.IsNullOrEmpty(context.Request.PathBase.Value)
+                ? context.Request.PathBase.Value
+                : context.Request.Path.Value;
             if (downstreamPath == path)
             {
                 context.Response.StatusCode = 200;
